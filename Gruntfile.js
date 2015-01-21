@@ -58,6 +58,9 @@ module.exports = function(grunt) {
             'css/build/global.css': 'css/global.scss'
           }
         }
+      },
+      jshint: {
+        all: ['Gruntfile.js', 'lib/**/*.js', 'test/**/*.js']
       }
     
   });
@@ -69,8 +72,9 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-imagemin');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-sass');
+  grunt.loadNpmTasks('grunt-contrib-jshint');
 
   // Default task(s).
-  grunt.registerTask('default', ['concat','uglify','sass','imagemin']);
+  grunt.registerTask('default', ['concat','uglify','sass','imagemin','jshint']);
 
 };
