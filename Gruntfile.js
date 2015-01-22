@@ -1,9 +1,19 @@
+var pkgjson = require('./package.json');
+
+var config = {
+    pkg: pkgjson,
+    app: 'app',
+    dist: 'dist',
+    bower: 'bower_components'
+};
+
 module.exports = function(grunt) {
-
-
+    // Load grunt tasks automatically
+    require('load-grunt-tasks')(grunt);
     // Project configuration.
     grunt.initConfig({
-        pkg: grunt.file.readJSON('package.json'),
+        config: config,
+        pkg: config.pkg,
         // The actual grunt server settings
         connect: {
             options: {
@@ -17,104 +27,173 @@ module.exports = function(grunt) {
         },
         watch: {
             js: {
-                files: ['app/scripts/{,*/}*.js'],
-                tasks: ['jshint'],
+                files: ['<%= config.app %>/scripts/{,*/}*.js'],
+                tasks: ['newer:jshint'],
                 options: {
                     livereload: true
                 }
             },
             stylesheets: {
-                files: 'app/**/*.css',
+                files: '<%= config.app %>/**/*.css',
                 tasks: ['stylesheets']
             },
             gruntfile: {
                 files: ['Gruntfile.js']
             },
             sass: {
-                files: ['app/styles/{,*/}*.{scss,sass}'],
+                files: ['<%= config.app %>/styles/{,*/}*.{scss,sass}'],
                 tasks: ['sass', 'autoprefixer']
             },
         },
         copy: {
             build: {
-                cwd: 'app',
-                src: ['**'],
-                dest: 'dist',
-                expand: true
+                files: [{
+                    cwd: '<%= config.app %>',
+                    src: ['**'],
+                    dest: '<%= config.dist %>',
+                    expand: true
+                }, {
+                    cwd: './bower_components/bootstrap/dist/js/',
+                    dot: true,
+                    src: 'bootstrap.min.js',
+                    dest: '<%= config.dist %>/scripts/vendor/',
+                    expand: true
+                }, {
+                    cwd: './bower_components/bootstrap/dist/css/',
+                    dot: true,
+                    src: 'bootstrap.min.css',
+                    dest: '<%= config.dist %>/styles/vendor/',
+                    expand: true
+                }, {
+                    cwd: './bower_components/bootstrap-material-design/dist/css/',
+                    dot: true,
+                    src: 'material.min.css',
+                    dest: '<%= config.dist %>/styles/vendor/',
+                    expand: true
+                }, {
+                    cwd: './bower_components/bootstrap-material-design/dist/css/',
+                    dot: true,
+                    src: 'ripples.min.css',
+                    dest: '<%= config.dist %>/styles/vendor/',
+                    expand: true
+                }, {
+                    cwd: './bower_components/bootstrap-material-design/dist/js/',
+                    dot: true,
+                    src: 'ripples.min.js',
+                    dest: '<%= config.dist %>/scripts/vendor/',
+                    expand: true
+                }, {
+                    cwd: './bower_components/bootstrap-material-design/dist/js/',
+                    dot: true,
+                    src: 'ripples.min.js',
+                    dest: '<%= config.dist %>/scripts/vendor/',
+                    expand: true
+                }, {
+                    cwd: './bower_components/bootstrap-material-design/dist/js/',
+                    dot: true,
+                    src: 'material.min.js',
+                    dest: '<%= config.dist %>/scripts/vendor/',
+                    expand: true
+                }, {
+                    cwd: './bower_components/jquery/dist/',
+                    dot: true,
+                    src: 'jquery.min.js',
+                    dest: '<%= config.dist %>/scripts/vendor/',
+                    expand: true
+                }]
             },
         },
         clean: {
             build: {
-                src: ['dist']
+                src: ['<%= config.dist %>']
             },
             stylesheets: {
-                src: ['dist/styles/*.css', '!build/application.min.css']
+                src: ['<%= config.dist %>/styles/*.css', '!<%= config.dist %>/styles/production.min.css']
             },
             scripts: {
-                src: ['dist/scripts/*.js', '!dist/application.js']
+                src: ['<%= config.dist %>/scripts/*.js', '!<%= config.dist %>/scripts/production.min.js']
             },
         },
         autoprefixer: {
             build: {
                 expand: true,
-                cwd: 'dist',
+                cwd: '<%= config.dist %>',
                 src: ['styles/*.css'],
-                dest: 'dist'
+                dest: '<%= config.dist %>'
             }
         },
         uglify: {
             build: {
                 files: {
-                    'dist/scripts/application.min.js': ['dist/scripts/*.js']
+                    '<%= config.dist %>/scripts/production.min.js': ['<%= config.dist %>/scripts/production.js']
                 }
             }
         },
         cssmin: {
             build: {
                 files: {
-                    'dist/styles/application.min.css': ['dist/styles/*.css']
+                    '<%= config.dist %>/styles/application.min.css': ['<%= config.dist %>/styles/*.css']
                 }
+            }
+        },
+        htmlmin: { // Task
+            dist: { // Target
+                options: { // Target options
+                    removeComments: true,
+                    collapseWhitespace: true
+                },
+                files: { // Dictionary of files
+                    'dist/index.html': 'dist/*.html'
+                }
+            }
+        },
+        concat: {
+            options: {
+                separator: ';',
+            },
+            dist: {
+                src: ['<%= config.dist %>/scripts/*.js'],
+                dest: 'dist/scripts/production.js',
             }
         },
         jshint: {
             all: [
                 'Gruntfile.js',
-                'app/scripts/{,*/}*.js',
-                '!app/scripts/vendor/*'
+                '<%= config.app %>/scripts/{,*/}*.js'
             ]
         },
+        //play with this later
+        concurrent: {
+            dist: [
+                'jshint',
+                'sass'
+            ]
+        }
 
     });
 
-    //load the tasks
-    grunt.loadNpmTasks('grunt-contrib-copy');
-    grunt.loadNpmTasks("grunt-contrib-clean");
-    grunt.loadNpmTasks('grunt-contrib-uglify');
-    grunt.loadNpmTasks('grunt-contrib-connect');
-    grunt.loadNpmTasks('grunt-contrib-concat');
-    grunt.loadNpmTasks('grunt-contrib-imagemin');
-    grunt.loadNpmTasks('grunt-contrib-watch');
-    grunt.loadNpmTasks('grunt-contrib-sass');
-    grunt.loadNpmTasks('grunt-contrib-jshint');
-    grunt.loadNpmTasks('grunt-contrib-cssmin');
-    grunt.loadNpmTasks('grunt-autoprefixer');
     // Default task(s).
 
     grunt.registerTask(
         'build',
-        'Compiles all of the assets and copies the files to the build directory.', ['clean:build', 'copy',
-            'stylesheets', 'scripts'
+        'Compiles all of the assets and copies the files to the build directory.', ['clean:build', 'newer:copy',
+            'stylesheets', 'scripts', 'html', 'clean:stylesheets', 'clean:scripts'
         ]
     );
 
     grunt.registerTask(
         'stylesheets',
-        'Compiles the stylesheets.', ['autoprefixer', 'cssmin', 'clean:stylesheets']
+        'Compiles the stylesheets.', ['newer:autoprefixer', 'newer:cssmin', 'clean:stylesheets']
+    );
+
+    grunt.registerTask(
+        'html',
+        'stuff with html', ['newer:htmlmin']
     );
 
     grunt.registerTask(
         'scripts',
-        'Compiles the JavaScript files.', ['uglify', 'clean:scripts']
+        'Compiles the JavaScript files.', ['newer:jshint', 'newer:concat', 'newer:uglify']
     );
 
     grunt.registerTask('default', 'start the server and preview your app', function(target) {
