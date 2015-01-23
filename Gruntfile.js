@@ -23,7 +23,17 @@ module.exports = function(grunt) {
                 // Change this to '0.0.0.0' to access the server from outside
                 hostname: 'localhost'
             },
-            livereload: true
+            livereload: {
+                options: {
+                    middleware: function(connect) {
+                        return [
+                            connect.static('.tmp'),
+                            connect().use('/bower_components', connect.static('./bower_components')),
+                            connect.static(config.dist)
+                        ];
+                    }
+                }
+            }
         },
         watch: {
             js: {
@@ -44,6 +54,16 @@ module.exports = function(grunt) {
                 files: ['<%= config.app %>/styles/{,*/}*.{scss,sass}'],
                 tasks: ['sass', 'autoprefixer']
             },
+            livereload: {
+                options: {
+                    livereload: '<%= connect.options.livereload %>'
+                },
+                files: [
+                    '<%= config.dist %>/{,*/}*.html',
+                    '.tmp/styles/{,*/}*.css',
+                    '<%= config.dist %>/images/{,*/}*'
+                ]
+            }
         },
         copy: {
             build: {
@@ -67,7 +87,7 @@ module.exports = function(grunt) {
                 }, {
                     cwd: './bower_components/bootstrap-material-design/dist/css/',
                     dot: true,
-                    src: 'material.min.css',
+                    src: 'material-wfont.min.css',
                     dest: '<%= config.dist %>/styles/vendor/',
                     expand: true
                 }, {
@@ -108,7 +128,7 @@ module.exports = function(grunt) {
                 src: ['<%= config.dist %>']
             },
             stylesheets: {
-                src: ['<%= config.dist %>/styles/*.css', '!<%= config.dist %>/styles/production.min.css']
+                src: ['<%= config.dist %>/styles/*.{scss,sass,css}', '!<%= config.dist %>/styles/production.min.css']
             },
             scripts: {
                 src: ['<%= config.dist %>/scripts/*.js', '!<%= config.dist %>/scripts/production.min.js']
@@ -162,6 +182,20 @@ module.exports = function(grunt) {
                 '<%= config.app %>/scripts/{,*/}*.js'
             ]
         },
+        sass: {
+            options: {
+                loadPath: 'bower_components'
+            },
+            dist: {
+                files: [{
+                    expand: true,
+                    cwd: '<%= config.app %>/styles',
+                    src: ['*.{scss,sass}'],
+                    dest: '<%= config.dist %>/styles',
+                    ext: '.css'
+                }]
+            }
+        },
         //play with this later
         concurrent: {
             dist: [
@@ -177,13 +211,13 @@ module.exports = function(grunt) {
     grunt.registerTask(
         'build',
         'Compiles all of the assets and copies the files to the build directory.', ['clean:build', 'newer:copy',
-            'stylesheets', 'scripts', 'html', 'clean:stylesheets', 'clean:scripts'
+            'stylesheets', 'scripts', 'html'
         ]
     );
 
     grunt.registerTask(
         'stylesheets',
-        'Compiles the stylesheets.', ['newer:autoprefixer', 'newer:cssmin', 'clean:stylesheets']
+        'Compiles the stylesheets.', ['newer:sass', 'newer:autoprefixer', 'newer:cssmin', 'clean:stylesheets']
     );
 
     grunt.registerTask(
@@ -193,7 +227,7 @@ module.exports = function(grunt) {
 
     grunt.registerTask(
         'scripts',
-        'Compiles the JavaScript files.', ['newer:jshint', 'newer:concat', 'newer:uglify']
+        'Compiles the JavaScript files.', ['newer:jshint', 'newer:concat', 'newer:uglify', 'clean:scripts']
     );
 
     grunt.registerTask('default', 'start the server and preview your app', function(target) {
