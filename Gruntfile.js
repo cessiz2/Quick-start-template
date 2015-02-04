@@ -120,6 +120,12 @@ module.exports = function(grunt) {
                     src: 'jquery.min.js',
                     dest: '<%= config.dist %>/scripts/vendor/',
                     expand: true
+                }, {
+                    cwd: './bower_components/waypoints/lib/',
+                    dot: true,
+                    src: 'jquery.waypoints.min.js',
+                    dest: '<%= config.dist %>/scripts/vendor/',
+                    expand: true
                 }]
             },
         },
@@ -147,6 +153,28 @@ module.exports = function(grunt) {
                 files: {
                     '<%= config.dist %>/scripts/production.min.js': ['<%= config.dist %>/scripts/production.js']
                 }
+            }
+        },
+        // The following *-min tasks produce minified files in the dist folder
+        imagemin: {
+            dist: {
+                files: [{
+                    expand: true,
+                    cwd: '<%= config.app %>/images',
+                    src: '{,*/}*.{gif,jpeg,jpg,png}',
+                    dest: '<%= config.dist %>/images'
+                }]
+            }
+        },
+
+        svgmin: {
+            dist: {
+                files: [{
+                    expand: true,
+                    cwd: '<%= config.app %>/images',
+                    src: '{,*/}*.svg',
+                    dest: '<%= config.dist %>/images'
+                }]
             }
         },
         cssmin: {
@@ -210,10 +238,14 @@ module.exports = function(grunt) {
 
     grunt.registerTask(
         'build',
-        'Compiles all of the assets and copies the files to the build directory.', ['clean:build', 'newer:copy',
+        'Compiles all of the assets and copies the files to the build directory.', ['clean:build', 'newer:copy','images',
             'stylesheets', 'scripts', 'html'
         ]
     );
+
+    grunt.registerTask(
+        'images', 
+        'compress images', 'newer:imagemin', 'newer:svgmin');
 
     grunt.registerTask(
         'stylesheets',
